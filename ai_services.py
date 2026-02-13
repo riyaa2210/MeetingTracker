@@ -3,24 +3,23 @@ from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv(AIzaSyBKHQ21I92s19VYI2ieVz6cd1Ns5vkbfbs))
+# Pass the string name of the variable to getenv, not the key itself
+GEMINI_KEY = os.getenv("GOOGLE_API_KEY") 
+client = genai.Client(api_key=GEMINI_KEY)
 
-def summarize_meeting(content: str):
-    prompt = f"Summarize these meeting notes and list key decisions: {content}"
+def analyze_meeting_sentiment(content: str):
+    # Added explicit instruction to return raw JSON to avoid parsing errors
+    prompt = f"""
+    Act as a corporate analyst. Analyze these meeting notes:
+    '{content}'
+    
+    Return ONLY a raw JSON response (no markdown blocks) with:
+    1. sentiment: (Positive/Neutral/Negative)
+    2. risk_level: (High/Medium/Low) - Set to High if there are unresolved conflicts.
+    3. summary: A 2-sentence summary of the tone.
+    """
     response = client.models.generate_content(
         model="gemini-2.0-flash", 
         contents=prompt
     )
-    return response.text
-
-# ai_services.py
-def analyze_meeting_health(content: str):
-    prompt = f"""Analyze the following meeting notes for emotional health and risks:
-    - Identify unresolved questions.
-    - Identify any conflicting viewpoints or tension.
-    - Rate overall sentiment (Positive/Neutral/Negative).
-    If there are major unresolved issues, tag it as 'High-Risk'.
-    Notes: {content}"""
-    
-    response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
     return response.text

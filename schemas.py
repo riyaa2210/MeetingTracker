@@ -1,17 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
-
+# --- ACTION ITEM SCHEMAS ---
 class ActionBase(BaseModel):
     task: str
-    assigned_to: Optional[str] = None
-    status: Optional[str] = "pending"
+    assigned_to: str
+    status: str = "pending"
     due_date: Optional[str] = None
-
 
 class ActionCreate(ActionBase):
     pass
-
 
 class ActionUpdate(BaseModel):
     task: Optional[str] = None
@@ -19,25 +17,21 @@ class ActionUpdate(BaseModel):
     status: Optional[str] = None
     due_date: Optional[str] = None
 
-
 class Action(ActionBase):
     id: int
     meeting_id: int
 
-    model_config = {
-        "from_attributes": True
-    }
+    class Config:
+        from_attributes = True
 
-
+# --- MEETING SCHEMAS ---
 class MeetingBase(BaseModel):
     title: str
-    description: Optional[str] = None
-    date: Optional[str] = None
-
+    description: str
+    date: str
 
 class MeetingCreate(MeetingBase):
     pass
-
 
 class MeetingUpdate(BaseModel):
     title: Optional[str] = None
@@ -46,26 +40,30 @@ class MeetingUpdate(BaseModel):
 
 class Meeting(MeetingBase):
     id: int
+    owner_id: int
     actions: List[Action] = []
 
-    model_config = {
-        "from_attributes": True
-    }
+    class Config:
+        from_attributes = True
 
-class UserCreate(BaseModel):
-    email: str
+# --- USER SCHEMAS ---
+class UserBase(BaseModel):
+    email: EmailStr
+
+class UserCreate(UserBase):
     password: str
 
-
-class User(BaseModel):
+class User(UserBase):
     id: int
-    email: str
+    meetings: List[Meeting] = []
 
-    model_config = {
-        "from_attributes": True
-    }
+    class Config:
+        from_attributes = True
 
-
+# --- AUTH SCHEMAS ---
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class TokenData(BaseModel):
+    email: Optional[str] = None

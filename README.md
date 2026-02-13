@@ -4,11 +4,11 @@
 A robust FastAPI-based backend application designed to manage corporate meetings, track action items, and generate AI-powered sentiment analysis.
 
 ## 🌟 Features
-* [cite_start]**User Authentication**: Secure JWT-based registration and login system.
-* [cite_start]**Meeting Management**: Full CRUD operations for creating, updating, and deleting meetings.
-* [cite_start]**Action Item Tracking**: Assign tasks to specific team members with status tracking.
-* [cite_start]**AI Health Check**: Leverages Google Gemini 2.0 Flash to analyze meeting notes for sentiment and potential risks.
-* [cite_start]**PDF Export**: Generates professional meeting minutes in PDF format.
+* **User Authentication**: Secure JWT-based registration and login system.
+* **Meeting Management**: Full CRUD operations for creating, updating, and deleting meetings.
+* **Action Item Tracking**: Assign tasks to specific team members with status tracking.
+* **AI Health Check**: Leverages Google Gemini 2.0 Flash to analyze meeting notes for sentiment and potential risks.
+* **PDF Export**: Generates professional meeting minutes in PDF format.
 
 ## 🛠️ Tech Stack
 * **Framework**: FastAPI
@@ -29,4 +29,5 @@ Clone the repository and install the dependencies:
 git clone [https://github.com/riyaa2210/MeetingTracker.git](https://github.com/riyaa2210/MeetingTracker.git)
 cd MeetingTracker
 pip install -r requirements.txt
+
 

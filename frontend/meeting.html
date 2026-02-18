@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meeting Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2 id="meetingTitle"></h2>
+<p id="meetingDesc"></p>
+
+<button onclick="analyzeMeeting()">AI Health</button>
+<button onclick="exportMeeting()">Export PDF</button>
+
+<div id="analysis"></div>
+
+<script src="script.js"></script>
+<script>
+    loadMeetingDetails();
+</script>
+</body>
+</html>

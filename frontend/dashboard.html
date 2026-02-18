@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Your Meetings</h2>
+
+<div id="meetings"></div>
+
+<h3>Create Meeting</h3>
+
+<input id="title" placeholder="Title">
+<input id="date" placeholder="Date">
+<textarea id="description" placeholder="Notes"></textarea>
+
+<button onclick="createMeeting()">Create</button>
+
+<script src="script.js"></script>
+<script>
+    loadMeetings();
+</script>
+</body>
+</html>

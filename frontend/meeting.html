@@ -6,16 +6,28 @@
 </head>
 <body>
 
-<h2 id="meetingTitle"></h2>
-<p id="meetingDesc"></p>
+<div class="navbar">
+    <h1>Meeting Details</h1>
+    <button onclick="backToDashboard()" class="back-btn">← Back to Dashboard</button>
+</div>
 
-<button onclick="analyzeMeeting()">AI Health</button>
-<button onclick="exportMeeting()">Export PDF</button>
+<div class="container">
+    <h2 id="meetingTitle"></h2>
+    <p id="meetingDesc"></p>
 
-<div id="analysis"></div>
+    <div class="button-group">
+        <button onclick="analyzeMeeting()" class="analyze-btn">🤖 AI Health Check</button>
+        <button onclick="exportMeeting()" class="export-btn">📄 Export PDF</button>
+    </div>
+
+    <div id="analysis" class="analysis-box"></div>
+</div>
 
 <script src="script.js"></script>
 <script>
+    if (!getToken()) {
+        window.location.href = "/";
+    }
     loadMeetingDetails();
 </script>
 </body>

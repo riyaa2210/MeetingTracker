@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from fastapi.middleware.cors import CORSMiddleware
+import os
 import models, schemas, crud
 from database import engine, get_db
 from auth import create_access_token, verify_password, SECRET_KEY, ALGORITHM
@@ -21,6 +24,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -48,7 +56,26 @@ def get_current_user(
 
 @app.get("/")
 def home():
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path, media_type="text/html")
     return {"message": "Meeting Outcome Tracker Running 🔥"}
+
+
+@app.get("/dashboard.html")
+def dashboard():
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "dashboard.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path, media_type="text/html")
+    return {"message": "Dashboard not found"}
+
+
+@app.get("/meeting.html")
+def meeting():
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "meeting.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path, media_type="text/html")
+    return {"message": "Meeting page not found"}
 
 
 @app.post("/register", response_model=schemas.User)
@@ -147,3 +174,16 @@ def export_meeting(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=meeting_{meeting_id}.pdf"}
     )
+
+
+# Catch-all route for SPA navigation - serves index.html for unmapped routes
+@app.get("/{full_path:path}")
+def catch_all(full_path: str):
+    # Don't catch API routes or static files
+    if full_path.startswith("api/") or full_path.startswith("static/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path, media_type="text/html")
+    return {"message": "Page not found"}

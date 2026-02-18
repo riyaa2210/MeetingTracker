@@ -6,20 +6,30 @@
 </head>
 <body>
 
-<h2>Your Meetings</h2>
+<div class="navbar">
+    <h1>Meeting Tracker Dashboard</h1>
+    <button onclick="logout()" class="logout-btn">Logout</button>
+</div>
 
-<div id="meetings"></div>
+<div class="container">
+    <h2>Your Meetings</h2>
 
-<h3>Create Meeting</h3>
+    <div id="meetings" class="meetings-list"></div>
 
-<input id="title" placeholder="Title">
-<input id="date" placeholder="Date">
-<textarea id="description" placeholder="Notes"></textarea>
-
-<button onclick="createMeeting()">Create</button>
+    <h3>Create New Meeting</h3>
+    <div class="form-group">
+        <input id="title" placeholder="Meeting Title" type="text">
+        <input id="date" placeholder="Date (YYYY-MM-DD)" type="date">
+        <textarea id="description" placeholder="Meeting Notes"></textarea>
+        <button onclick="createMeeting()" class="create-btn">Create Meeting</button>
+    </div>
+</div>
 
 <script src="script.js"></script>
 <script>
+    if (!getToken()) {
+        window.location.href = "/";
+    }
     loadMeetings();
 </script>
 </body>

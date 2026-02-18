@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "http://localhost:8000";
 
 function saveToken(token) {
     localStorage.setItem("token", token);
@@ -8,9 +8,28 @@ function getToken() {
     return localStorage.getItem("token");
 }
 
+function clearToken() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("meetingId");
+}
+
+function logout() {
+    clearToken();
+    window.location.href = "/";
+}
+
+function backToDashboard() {
+    window.location.href = "/dashboard.html";
+}
+
 async function register() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        showMessage("Please enter email and password", "error");
+        return;
+    }
 
     const res = await fetch(`${API}/register`, {
         method: "POST",
@@ -19,7 +38,12 @@ async function register() {
     });
 
     if (res.ok) {
-        document.getElementById("message").innerText = "Registered! Now login.";
+        showMessage("✅ Registered successfully! Now login.", "success");
+        document.getElementById("email").value = "";
+        document.getElementById("password").value = "";
+    } else {
+        const data = await res.json();
+        showMessage("❌ " + (data.detail || "Registration failed"), "error");
     }
 }
 
@@ -27,49 +51,82 @@ async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
+    if (!email || !password) {
+        showMessage("Please enter email and password", "error");
+        return;
+    }
+
     const formData = new URLSearchParams();
     formData.append("username", email);
     formData.append("password", password);
 
-    const res = await fetch(`${API}/login`, {
-        method: "POST",
-        body: formData
-    });
+    try {
+        const res = await fetch(`${API}/login`, {
+            method: "POST",
+            body: formData
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    // script.js update
-if (res.ok) {
-    saveToken(data.access_token);
-    window.location.href = "dashboard.html";
-} else {
-    document.getElementById("message").innerText = data.detail || "Login Failed";
+        if (res.ok) {
+            saveToken(data.access_token);
+            window.location.href = "/dashboard.html";
+        } else {
+            showMessage("❌ " + (data.detail || "Login failed"), "error");
+        }
+    } catch (error) {
+        showMessage("❌ Connection error. Make sure the server is running.", "error");
+    }
 }
+
+function showMessage(message, type) {
+    let msgEl = document.getElementById("message");
+    if (!msgEl) {
+        msgEl = document.createElement("p");
+        msgEl.id = "message";
+        document.body.appendChild(msgEl);
+    }
+    msgEl.innerText = message;
+    msgEl.className = type === "error" ? "message-box error" : "message-box success";
 }
 
 async function loadMeetings() {
-    const res = await fetch(`${API}/meetings/`, {
-        headers: { "Authorization": `Bearer ${getToken()}` }
-    });
+    try {
+        const res = await fetch(`${API}/meetings/`, {
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
 
-    const meetings = await res.json();
+        if (res.status === 401) {
+            logout();
+            return;
+        }
 
-    const container = document.getElementById("meetings");
-    container.innerHTML = "";
+        const meetings = await res.json();
 
-    meetings.forEach(m => {
-        container.innerHTML += `
-            <div>
-                <h4>${m.title}</h4>
-                <button onclick="viewMeeting(${m.id})">View</button>
-            </div>
-        `;
-    });
+        const container = document.getElementById("meetings");
+        if (meetings.length === 0) {
+            container.innerHTML = "<p style='text-align: center; color: #999;'>No meetings yet. Create one!</p>";
+        } else {
+            container.innerHTML = "";
+            meetings.forEach(m => {
+                container.innerHTML += `
+                    <div>
+                        <h4>${m.title}</h4>
+                        <p style="color: #666; font-size: 0.9rem;">📅 ${m.date}</p>
+                        <p style="color: #666; font-size: 0.85rem; margin: 0.5rem 0;">${m.description.substring(0, 100)}...</p>
+                        <button onclick="viewMeeting(${m.id})" style="width: 100%; margin-top: 0.8rem;">View Details</button>
+                    </div>
+                `;
+            });
+        }
+    } catch (error) {
+        console.error("Error loading meetings:", error);
+    }
 }
 
 function viewMeeting(id) {
     localStorage.setItem("meetingId", id);
-    window.location.href = "meeting.html";
+    window.location.href = "/meeting.html";
 }
 
 async function createMeeting() {
@@ -77,42 +134,82 @@ async function createMeeting() {
     const date = document.getElementById("date").value;
     const description = document.getElementById("description").value;
 
-    await fetch(`${API}/meetings/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({ title, date, description })
-    });
+    if (!title || !date || !description) {
+        alert("Please fill in all fields");
+        return;
+    }
 
-    loadMeetings();
+    try {
+        const res = await fetch(`${API}/meetings/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ title, date, description })
+        });
+
+        if (res.ok) {
+            document.getElementById("title").value = "";
+            document.getElementById("date").value = "";
+            document.getElementById("description").value = "";
+            alert("✅ Meeting created successfully!");
+            loadMeetings();
+        } else {
+            alert("❌ Failed to create meeting");
+        }
+    } catch (error) {
+        console.error("Error creating meeting:", error);
+    }
 }
 
 async function loadMeetingDetails() {
     const id = localStorage.getItem("meetingId");
 
-    const res = await fetch(`${API}/meetings/${id}`, {
-        headers: { "Authorization": `Bearer ${getToken()}` }
-    });
+    try {
+        const res = await fetch(`${API}/meetings/${id}`, {
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
 
-    const meeting = await res.json();
+        if (!res.ok) {
+            alert("Meeting not found or access denied");
+            window.location.href = "/dashboard.html";
+            return;
+        }
 
-    document.getElementById("meetingTitle").innerText = meeting.title;
-    document.getElementById("meetingDesc").innerText = meeting.description;
+        const meeting = await res.json();
+
+        document.getElementById("meetingTitle").innerText = `📅 ${meeting.title} (${meeting.date})`;
+        document.getElementById("meetingDesc").innerText = meeting.description;
+    } catch (error) {
+        console.error("Error loading meeting:", error);
+    }
 }
 
 async function analyzeMeeting() {
     const id = localStorage.getItem("meetingId");
 
-    const res = await fetch(`${API}/meetings/${id}/health`, {
-        headers: { "Authorization": `Bearer ${getToken()}` }
-    });
+    try {
+        const res = await fetch(`${API}/meetings/${id}/health`, {
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
 
-    const data = await res.json();
+        if (res.ok) {
+            const data = await res.json();
 
-    document.getElementById("analysis").innerText =
-        `Sentiment: ${data.sentiment}\nRisk: ${data.risk_level}\nSummary: ${data.summary}`;
+            const analysis = document.getElementById("analysis");
+            analysis.innerHTML = `
+                <strong>🤖 AI Analysis Results:</strong><br><br>
+                <strong>Sentiment:</strong> ${data.sentiment || "N/A"}<br>
+                <strong>Risk Level:</strong> ${data.risk_level || "N/A"}<br>
+                <strong>Summary:</strong> ${data.summary || "No summary available"}
+            `;
+        } else {
+            alert("Failed to analyze meeting");
+        }
+    } catch (error) {
+        console.error("Error analyzing meeting:", error);
+    }
 }
 
 function exportMeeting() {
